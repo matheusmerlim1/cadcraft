@@ -136,8 +136,13 @@ mod tests {
         assert_eq!(day(20_736), "2026-10-10");
         assert_eq!(date(std::time::UNIX_EPOCH - std::time::Duration::from_secs(86_400)), "1970-01-01");
         // Past chrono's range keeps the proleptic Gregorian date, not the epoch (old `civil_from_days`).
-        assert_eq!(day(115_740_740), "318857-05-20");
-        // Windows' SystemTime can't hold u64::MAX / 2 seconds, so it is only checked where it exists.
+        // Checked on the day count: Windows' SystemTime ends in the year 30828, so `day` would overflow.
+        assert_eq!(civil_from_days(115_740_740), (318_857, 5, 20));
+        let year_318857 = std::time::Duration::from_secs(115_740_740 * 86_400);
+        if let Some(t) = std::time::UNIX_EPOCH.checked_add(year_318857) {
+            assert_eq!(date(t), "318857-05-20");
+        }
+        // Nor can it hold u64::MAX / 2 seconds, so that one is also only checked where it exists.
         if let Some(far) = std::time::UNIX_EPOCH.checked_add(std::time::Duration::from_secs(u64::MAX / 2)) {
             assert_eq!(date(far), "292277026596-12-04");
         }
